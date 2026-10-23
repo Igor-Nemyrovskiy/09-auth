@@ -36,8 +36,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
       url:
         tag === "all"
-          ? "https://notehub.com/notes/filter/all"
-          : `https://notehub.com/notes/filter/${tag}`,
+          ? "https://09-auth-tau-ashen.vercel.app/notes/filter/all"
+          : `https://09-auth-tau-ashen.vercel.app/notes/filter/${tag}`,
       images: [
         {
           url: "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg",
