@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { checkSession } from "@/lib/api/serverApi";
-
 const privateRoutes = ["/notes", "/profile"];
 const publicRoutes = ["/sign-in", "/sign-up"];
 
-export async function proxy(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isPrivateRoute = privateRoutes.some((route) =>
@@ -16,13 +14,16 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith(route),
   );
 
-  const session = await checkSession();
+  const accessToken = request.cookies.get("accessToken");
+  const refreshToken = request.cookies.get("refreshToken");
 
-  if (isPrivateRoute && !session) {
+  const isAuthenticated = Boolean(accessToken || refreshToken);
+
+  if (isPrivateRoute && !isAuthenticated) {
     return NextResponse.redirect(new URL("/sign-in", request.url));
   }
 
-  if (isPublicRoute && session) {
+  if (isPublicRoute && isAuthenticated) {
     return NextResponse.redirect(new URL("/profile", request.url));
   }
 
