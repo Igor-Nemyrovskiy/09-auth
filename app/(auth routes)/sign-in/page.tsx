@@ -15,7 +15,7 @@ export default function SignInPage() {
 
   const [error, setError] = useState("");
 
-  const handleSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     setError("");

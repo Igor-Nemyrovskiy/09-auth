@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import type { Note } from "@/types/note";
 
 import api from "./api";
-
+import type { AxiosResponse } from "axios";
 import type { User } from "@/types/user";
 
 interface FetchNotesParams {
@@ -63,7 +63,9 @@ export async function fetchNoteById(id: string): Promise<Note> {
   return response.data;
 }
 
-export async function checkSession(): Promise<boolean> {
+export async function checkSession(): Promise<
+  AxiosResponse<CheckSessionResponse>
+> {
   const cookieHeader = await getCookieHeader();
 
   const response = await api.get<CheckSessionResponse>("/auth/session", {
@@ -72,7 +74,7 @@ export async function checkSession(): Promise<boolean> {
     },
   });
 
-  return response.data.success;
+  return response;
 }
 
 export async function getMe(): Promise<User> {
