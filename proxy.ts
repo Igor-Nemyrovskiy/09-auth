@@ -6,15 +6,19 @@ import { checkSession } from "@/lib/api/serverApi";
 const privateRoutes = ["/notes", "/profile"];
 const publicRoutes = ["/sign-in", "/sign-up"];
 
+function matchesRoute(pathname: string, route: string) {
+  return pathname === route || pathname.startsWith(`${route}/`);
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isPrivateRoute = privateRoutes.some((route) =>
-    pathname.startsWith(route),
+    matchesRoute(pathname, route),
   );
 
   const isPublicRoute = publicRoutes.some((route) =>
-    pathname.startsWith(route),
+    matchesRoute(pathname, route),
   );
 
   const cookieStore = await cookies();
@@ -23,13 +27,23 @@ export async function proxy(request: NextRequest) {
   const refreshToken = cookieStore.get("refreshToken")?.value;
 
   let isAuthenticated = Boolean(accessToken);
-  let sessionResponse;
+  let refreshedCookies: string[] = [];
 
   if (!accessToken && refreshToken) {
     try {
-      sessionResponse = await checkSession();
+      const sessionResponse = await checkSession();
 
-      isAuthenticated = sessionResponse.data.success;
+      const setCookie = sessionResponse.headers["set-cookie"];
+
+      if (setCookie) {
+        refreshedCookies = Array.isArray(setCookie) ? setCookie : [setCookie];
+
+        const hasNewAccessToken = refreshedCookies.some((cookie) =>
+          cookie.startsWith("accessToken="),
+        );
+
+        isAuthenticated = hasNewAccessToken;
+      }
     } catch {
       isAuthenticated = false;
     }
@@ -45,17 +59,9 @@ export async function proxy(request: NextRequest) {
     response = NextResponse.next();
   }
 
-  if (sessionResponse) {
-    const setCookie = sessionResponse.headers["set-cookie"];
-
-    if (setCookie) {
-      const cookiesArray = Array.isArray(setCookie) ? setCookie : [setCookie];
-
-      cookiesArray.forEach((cookie) => {
-        response.headers.append("set-cookie", cookie);
-      });
-    }
-  }
+  refreshedCookies.forEach((cookie) => {
+    response.headers.append("set-cookie", cookie);
+  });
 
   return response;
 }
