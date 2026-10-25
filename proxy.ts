@@ -40,7 +40,7 @@ export async function proxy(request: NextRequest) {
   if (isPrivateRoute && !isAuthenticated) {
     response = NextResponse.redirect(new URL("/sign-in", request.url));
   } else if (isPublicRoute && isAuthenticated) {
-    response = NextResponse.redirect(new URL("/profile", request.url));
+    response = NextResponse.redirect(new URL("/", request.url));
   } else {
     response = NextResponse.next();
   }
